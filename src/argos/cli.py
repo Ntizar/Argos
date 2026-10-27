@@ -14,6 +14,7 @@ import subprocess
 import sys
 
 from . import __version__
+from .canvas import escribir_canvas, generar_canvas
 from .lock import (forzar_liberacion, info_lock, lock_de_escritura)
 from .modelo import (ESTADOS, ErrorArgos, Argos, ArgosOcupado)
 
@@ -22,7 +23,8 @@ RUTA_PLANTILLA_AGENTS = os.path.join(
     "..", "plantilla", "REGLAS-ARGOS.md")
 
 # comandos que solo escriben (necesitan lock); lecturas van sin lock
-COMANDOS_LECTURA = {"estado", "ver", "preparadas", "bloqueadas", "lista", "version"}
+COMANDOS_LECTURA = {"estado", "ver", "preparadas", "bloqueadas", "lista",
+                    "version", "canvas"}
 
 
 # ------------------------------------------------------------------ salida
@@ -372,6 +374,25 @@ def cmd_unlock(args) -> int:
     return 0
 
 
+# ------------------------------------------------------------------ canvas
+
+
+def cmd_canvas(args) -> int:
+    tab = Argos(args.argos)
+    tab.cargar()
+    canvas = generar_canvas(tab.datos)
+    destino = args.salida or os.path.join(
+        os.path.dirname(tab.ruta) or ".", "Argos.canvas")
+    escribir_canvas(destino, canvas)
+    n, m = len(canvas["nodes"]), len(canvas["edges"])
+    if args.json:
+        print(_json({"ruta": destino, "tarjetas": n, "dependencias": m}))
+    else:
+        print(f"Vista generada: {destino} — {n} tarjetas, {m} dependencias. "
+              "Ábrela con Obsidian (es proyección: se regenera, no se edita).")
+    return 0
+
+
 # ------------------------------------------------------------------ parser
 
 def construir_parser() -> argparse.ArgumentParser:
@@ -438,6 +459,8 @@ def construir_parser() -> argparse.ArgumentParser:
     q.add_argument("bloqueada")
 
     sp("normalizar", cmd_normalizar, "asigna IDs y recalcula bloqueadas")
+    q = sp("canvas", cmd_canvas, "genera la vista Obsidian (.canvas) del tablero")
+    q.add_argument("salida", nargs="?", default=None)
     sp("sync", cmd_sync, "git pull --rebase + push del proyecto")
     sp("unlock", cmd_unlock, "elimina un lock colgado")
     return p

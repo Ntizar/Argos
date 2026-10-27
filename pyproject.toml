@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "argos-tablero"
-version = "2.0.0"
+version = "2.1.0"
 description = "Argos: tablero de tareas humano+agente con 6 estados, dependencias y lock. Hecho con ❤️ por David Antizar."
 readme = "README.md"
 license = { text = "MIT" }

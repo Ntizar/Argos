@@ -50,6 +50,7 @@ bloqueada --(automático: normalizar)--> por_hacer   cuando todas las dependenci
 | `argos rechazar <ID>` | humano | Borra una propuesta |
 | `argos dep <A> <B>` | humano | A bloquea a B (rechaza ciclos) |
 | `argos normalizar` | ambos | Asigna IDs, recalcula bloqueos |
+| `argos canvas [fichero]` | ambos | Genera la vista Obsidian (`Argos.canvas`): colores = estados, flechas = dependencias |
 | `argos sync` | ambos | `git pull --rebase` + push |
 | `argos unlock` | humano | Elimina un lock colgado |
 

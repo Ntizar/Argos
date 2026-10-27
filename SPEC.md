@@ -12,8 +12,8 @@ toca el JSON: todo pasa por el CLI, que valida y rechaza lo prohibido por códig
 ## Alcance
 
 ### Sí hace
-- CLI `argos` con 15 comandos (estado, ver, preparadas, bloqueadas, lista, empezar,
-  terminar, pausar, editar, proponer, aprobar, hecha, rechazar, dep, normalizar).
+- CLI `argos` con 16 comandos (estado, ver, preparadas, bloqueadas, lista, empezar,
+  terminar, pausar, editar, proponer, aprobar, hecha, rechazar, dep, normalizar, canvas).
 - Extras: `init` (crea argos.json + copia plantilla AGENTS.md), `sync` (pull --rebase + push),
   `unlock` (fuerza un lock colgado), `--json` en todos los comandos.
 - 6 estados en castellano con transiciones cerradas y validadas.
@@ -53,6 +53,7 @@ toca el JSON: todo pasa por el CLI, que valida y rechaza lo prohibido por códig
 | `rechazar <ID>` | humano | Borra una propuesta |
 | `dep <A> <B>` | humano | A bloquea a B (rechaza ciclos) |
 | `normalizar` | ambos | Asigna IDs, recalcula bloqueadas |
+| `canvas [fichero]` | ambos | Genera vista Obsidian (proyección; por defecto `Argos.canvas`) |
 | `sync` | ambos | git pull --rebase --autostash + push |
 | `unlock` | humano | Elimina lock colgado |
 
