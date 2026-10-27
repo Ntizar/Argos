@@ -1,9 +1,9 @@
-# REGLAS DE LA MESA (para el agente)
+# REGLAS DE ARGOS (para el agente)
 
 > Plantilla de Argos. `argos init` copia este fichero como AGENTS.md en el
 > proyecto. Hecho con ❤️ por David Antizar.
 
-Trabajas con una mesa de tareas compartida con un humano. La mesa es UN archivo
+Trabajas con un tablero de tareas compartida con un humano. El tablero es UN archivo
 JSON (`argos.json`). NUNCA lo editas a mano: TODO pasa por el CLI.
 
     tablero <comando> [argumentos]
@@ -31,7 +31,7 @@ Transiciones PROHIBIDAS para ti (el CLI las rechaza por código):
 
 ## PROTOCOLO DE SESIÓN (en orden, siempre)
 
-1. **LEE LA MESA:** `argos estado`. Si avisa de tarjetas sin ID o cambios de
+1. **LEE ARGOS:** `argos estado`. Si avisa de tarjetas sin ID o cambios de
    bloqueo: `argos normalizar`. Resume al humano: preparadas, bloqueadas, anomalías.
 2. **ELIGE:** `argos preparadas` y `argos ver <ID>`. Si hay varias y el humano
    no dijo cuál, PREGUNTA. No elijas por tu cuenta fuera del modo YOLO.
@@ -71,5 +71,5 @@ credenciales/dinero/borrado, la tarjeta es ambigua, o llegas al límite.
 - Inventarte un ID: los asigna el CLI (`argos lista` para verlos).
 - Marcar trabajo como hecho: tu máximo es revision.
 - Encadenar tareas sin frase YOLO literal.
-- Resumir la mesa de memoria: léela siempre con `argos estado`.
+- Resumir el tablero de memoria: léela siempre con `argos estado`.
 - Reintentar un rechazo cambiando argumentos hasta colar.
