@@ -3,9 +3,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "mesa-tablero"
-version = "1.0.0"
-description = "Mesa: tablero de tareas humano+agente con 6 estados, dependencias y lock. Hecho con ❤️ por David Antizar."
+name = "argos-tablero"
+version = "2.0.0"
+description = "Argos: tablero de tareas humano+agente con 6 estados, dependencias y lock. Hecho con ❤️ por David Antizar."
 readme = "README.md"
 license = { text = "MIT" }
 authors = [{ name = "David Antizar" }]
@@ -13,13 +13,13 @@ requires-python = ">=3.11"
 keywords = ["kanban", "agentes", "ia", "tablero", "tareas"]
 
 [project.scripts]
-tablero = "tablero.cli:main"
+argos = "argos.cli:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/tablero"]
+packages = ["src/argos"]
 
 [tool.hatch.build.targets.wheel.force-include]
-"plantilla/REGLAS-MESA.md" = "tablero/plantilla/REGLAS-MESA.md"
+"plantilla/REGLAS-ARGOS.md" = "argos/plantilla/REGLAS-ARGOS.md"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

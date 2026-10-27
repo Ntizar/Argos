@@ -9,7 +9,7 @@ import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from tablero import cli  # noqa: E402
+from argos import cli  # noqa: E402
 
 
 def run(argv, cwd=None):
@@ -34,22 +34,22 @@ def json_out(argv, cwd=None):
 
 
 @pytest.fixture
-def mesa(tmp_path):
-    """Un proyecto limpio con tablero.json creado vía `tablero init`."""
-    ruta = str(tmp_path / "tablero.json")
-    code, out, err = run(["--tablero", ruta, "init", "proyecto-test"])
+def tablero(tmp_path):
+    """Un proyecto limpio con argos.json creado vía `argos init`."""
+    ruta = str(tmp_path / "argos.json")
+    code, out, err = run(["--argos", ruta, "init", "proyecto-test"])
     assert code == 0, err
     return ruta
 
 
 @pytest.fixture
-def tablero_creado(mesa):
-    """Mesa con tres tarjetas aprobadas: DES01, DES02 (depende de DES01), INV01."""
-    run(["--tablero", mesa, "proponer", "Desarrollo", "Login", "POST /login"])
-    run(["--tablero", mesa, "proponer", "Desarrollo", "Logout", "POST /logout",
+def tablero_creado(tablero):
+    """Argos con tres tarjetas aprobadas: DES01, DES02 (depende de DES01), INV01."""
+    run(["--argos", tablero, "proponer", "Desarrollo", "Login", "POST /login"])
+    run(["--argos", tablero, "proponer", "Desarrollo", "Logout", "POST /logout",
          "--depende-de", "DES01"])
-    run(["--tablero", mesa, "proponer", "Investigación", "JWT", "elegir librería"])
-    run(["--tablero", mesa, "aprobar", "DES01"])
-    run(["--tablero", mesa, "aprobar", "DES02"])
-    run(["--tablero", mesa, "aprobar", "INV01"])
-    return mesa
+    run(["--argos", tablero, "proponer", "Investigación", "JWT", "elegir librería"])
+    run(["--argos", tablero, "aprobar", "DES01"])
+    run(["--argos", tablero, "aprobar", "DES02"])
+    run(["--argos", tablero, "aprobar", "INV01"])
+    return tablero

@@ -1,4 +1,4 @@
-"""Mesa — modelo del tablero: estados, transiciones, dependencias, IDs.
+"""Argos — modelo del tablero: estados, transiciones, dependencias, IDs.
 
 Filosofía Kanvas: el agente nunca toca el JSON; el CLI valida todo por código.
 Cero dependencias externas (stdlib only) para instalar igual en Windows y Linux.
@@ -31,11 +31,11 @@ ESTADOS_HUMANOS = ("propuesta", "revision")   # solo el humano mueve desde aquí
 LOCK_STALE_SEGUNDOS = 300  # un lock con más de 5 min es un colgado
 
 
-class ErrorTablero(Exception):
+class ErrorArgos(Exception):
     """Rechazo del CLI: el mensaje explica POR QUÉ (un rechazo es una respuesta)."""
 
 
-class TableroOcupado(ErrorTablero):
+class ArgosOcupado(ErrorArgos):
     """Lock activo de otro escritor."""
 
 
@@ -53,9 +53,9 @@ def _tarea_nueva(grupo, titulo, descripcion="", estado="propuesta", depende_de=N
     }
 
 
-# ------------------------------------------------------------------ tablero
+# ------------------------------------------------------------------ argos
 
-class Tablero:
+class Argos:
     def __init__(self, ruta: str):
         self.ruta = os.path.abspath(ruta)
         self.datos = {"proyecto": "", "version": 1, "tareas": []}
@@ -64,23 +64,23 @@ class Tablero:
 
     def cargar(self) -> None:
         if not os.path.exists(self.ruta):
-            raise ErrorTablero(
-                f"No existe {self.ruta}. Ejecuta: tablero init")
+            raise ErrorArgos(
+                f"No existe {self.ruta}. Ejecuta: argos init")
         try:
             with open(self.ruta, encoding="utf-8") as f:
                 datos = json.load(f)
         except json.JSONDecodeError as e:
-            raise ErrorTablero(
-                f"tablero.json corrupto (JSON inválido): {e}. "
+            raise ErrorArgos(
+                f"argos.json corrupto (JSON inválido): {e}. "
                 "Repararlo a mano es tarea del humano.")
         if not isinstance(datos, dict) or not isinstance(datos.get("tareas"), list):
-            raise ErrorTablero(
-                "tablero.json no tiene el esquema esperado "
+            raise ErrorArgos(
+                "argos.json no tiene el esquema esperado "
                 "(falta 'tareas' como lista). El humano debe revisarlo.")
         self.datos = datos
         for i, t in enumerate(self.datos["tareas"]):
             if not isinstance(t, dict):
-                raise ErrorTablero(
+                raise ErrorArgos(
                     f"Tarea #{i} no es un objeto JSON. El humano debe revisarla.")
             t.setdefault("id", "")
             t.setdefault("grupo", "General")
@@ -90,14 +90,14 @@ class Tablero:
             t.setdefault("depende_de", [])
             t.setdefault("notas", "")
             if t["estado"] not in ESTADOS:
-                raise ErrorTablero(
+                raise ErrorArgos(
                     f"Tarea {t['id'] or t['titulo']}: estado desconocido "
                     f"'{t['estado']}'. Estados válidos: {', '.join(ESTADOS)}.")
 
     def guardar(self) -> None:
         """Escritura atómica: tmp en el mismo directorio + os.replace."""
         carpeta = os.path.dirname(self.ruta) or "."
-        fd, tmp = tempfile.mkstemp(prefix=".tablero-", suffix=".tmp", dir=carpeta)
+        fd, tmp = tempfile.mkstemp(prefix=".argos-", suffix=".tmp", dir=carpeta)
         try:
             with os.fdopen(fd, "w", encoding="utf-8") as f:
                 json.dump(self.datos, f, ensure_ascii=False, indent=2)
@@ -123,9 +123,9 @@ class Tablero:
     def _exigir_id(self, tid: str):
         t = self.por_id(tid)
         if t is None:
-            raise ErrorTablero(
+            raise ErrorArgos(
                 f"La tarjeta '{tid}' no existe. IDs reales los lista "
-                "`tablero lista` o `tablero preparadas`; nunca te los inventes.")
+                "`argos lista` o `argos preparadas`; nunca te los inventes.")
         return t
 
     # ---------- IDs
@@ -238,24 +238,24 @@ class Tablero:
         desde = t["estado"]
         legal = TRANSICIONES.get((desde, hacia))
         if legal is None:
-            raise ErrorTablero(
+            raise ErrorArgos(
                 f"Transición {desde} → {hacia} PROHIBIDA. "
                 f"Ciclo legal de '{tid}': {self._ciclo_de(desde)}")
         comando_legal, quien_legal = legal
         if comando != comando_legal:
-            raise ErrorTablero(
+            raise ErrorArgos(
                 f"'{tid}' está en '{desde}': la transición a '{hacia}' "
                 f"corresponde a `{comando_legal}`, no a `{comando}`.")
         if quien == "agente" and quien_legal != "agente":
-            raise ErrorTablero(
+            raise ErrorArgos(
                 f"`{comando}` no es un comando de agente para '{tid}' "
                 f"(en '{desde}'). Esa autoridad es del HUMANO. No reintentes.")
         if desde == "por_hacer" and hacia == "en_curso":
             faltan = self.faltan_dependencias(t)
             if faltan:
-                raise ErrorTablero(
+                raise ErrorArgos(
                     f"'{tid}' está BLOQUEADA por dependencias sin hacer: "
-                    f"{', '.join(faltan)}. Ejecuta `tablero bloqueadas` para verlo.")
+                    f"{', '.join(faltan)}. Ejecuta `argos bloqueadas` para verlo.")
         t["estado"] = hacia
         return {"id": tid, "desde": desde, "hacia": hacia}
 
@@ -286,7 +286,7 @@ class Tablero:
         sin_id = [t for t in self.tareas if not t["id"]]
         if sin_id:
             anomalias.append(
-                f"{len(sin_id)} tarjeta(s) sin ID. Ejecuta: tablero normalizar")
+                f"{len(sin_id)} tarjeta(s) sin ID. Ejecuta: argos normalizar")
         en_curso = [t for t in self.tareas if t["estado"] == "en_curso"]
         if len(en_curso) > 1:
             anomalias.append(
@@ -313,7 +313,7 @@ class Tablero:
     def rechazar(self, tid) -> dict:
         t = self._exigir_id(tid)
         if t["estado"] != "propuesta":
-            raise ErrorTablero(
+            raise ErrorArgos(
                 f"Solo se rechazan tarjetas en 'propuesta' (rechazar = borrar). "
                 f"'{tid}' está en '{t['estado']}'.")
         self.tareas.remove(t)
@@ -324,15 +324,15 @@ class Tablero:
 
     def anadir_dependencia(self, bloquea, bloqueada) -> dict:
         if bloquea == bloqueada:
-            raise ErrorTablero("Una tarjeta no puede bloquearse a sí misma.")
+            raise ErrorArgos("Una tarjeta no puede bloquearse a sí misma.")
         self._exigir_id(bloquea)
         self._exigir_id(bloqueada)
         b = self.por_id(bloqueada)
         if bloquea in b["depende_de"]:
-            raise ErrorTablero(
+            raise ErrorArgos(
                 f"{bloqueada} ya depende de {bloquea}. Nada que hacer.")
         if self._crearia_ciclo(bloquea, bloqueada):
-            raise ErrorTablero(
+            raise ErrorArgos(
                 f"RECHAZADO: {bloquea} → {bloqueada} crearía un ciclo de "
                 "dependencias. Los ciclos nunca se permiten.")
         b["depende_de"].append(bloquea)
@@ -341,7 +341,7 @@ class Tablero:
     def editar_notas(self, tid, texto) -> dict:
         t = self._exigir_id(tid)
         if t["estado"] != "en_curso":
-            raise ErrorTablero(
+            raise ErrorArgos(
                 f"Solo se edita una tarjeta en_curso; '{tid}' está en "
                 f"'{t['estado']}'. Si es trabajo nuevo, propónlo con `proponer`.")
         sello = t["notas"] + ("\n" if t["notas"] else "")

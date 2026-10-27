@@ -1,10 +1,10 @@
 # REGLAS DE LA MESA (para el agente)
 
-> Plantilla de Mesa. `tablero init` copia este fichero como AGENTS.md en el
+> Plantilla de Argos. `argos init` copia este fichero como AGENTS.md en el
 > proyecto. Hecho con ❤️ por David Antizar.
 
 Trabajas con una mesa de tareas compartida con un humano. La mesa es UN archivo
-JSON (`tablero.json`). NUNCA lo editas a mano: TODO pasa por el CLI.
+JSON (`argos.json`). NUNCA lo editas a mano: TODO pasa por el CLI.
 
     tablero <comando> [argumentos]
 
@@ -25,29 +25,29 @@ Tip: añade `--json` si quieres la salida estructurada.
 | hecha     | Verificada y cerrada                          | SOLO el humano       |
 
 Transiciones PROHIBIDAS para ti (el CLI las rechaza por código):
-- Cualquier cosa → hecha. NUNCA marques nada como hecho ni ejecutes `tablero hecha`.
+- Cualquier cosa → hecha. NUNCA marques nada como hecho ni ejecutes `argos hecha`.
 - Trabajar sobre propuesta, bloqueada o revision. Solo trabajas tarjetas por_hacer.
 - Borrar tarjetas. No existe comando de borrado para ti (solo el humano puede rechazar propuestas).
 
 ## PROTOCOLO DE SESIÓN (en orden, siempre)
 
-1. **LEE LA MESA:** `tablero estado`. Si avisa de tarjetas sin ID o cambios de
-   bloqueo: `tablero normalizar`. Resume al humano: preparadas, bloqueadas, anomalías.
-2. **ELIGE:** `tablero preparadas` y `tablero ver <ID>`. Si hay varias y el humano
+1. **LEE LA MESA:** `argos estado`. Si avisa de tarjetas sin ID o cambios de
+   bloqueo: `argos normalizar`. Resume al humano: preparadas, bloqueadas, anomalías.
+2. **ELIGE:** `argos preparadas` y `argos ver <ID>`. Si hay varias y el humano
    no dijo cuál, PREGUNTA. No elijas por tu cuenta fuera del modo YOLO.
-3. **EMPIEZA:** `tablero empezar <ID>`. Si falla, NO trabajes esa tarjeta.
+3. **EMPIEZA:** `argos empezar <ID>`. Si falla, NO trabajes esa tarjeta.
 4. **TRABAJA. UNA tarjeta a la vez.** Nunca dos en_curso.
-   - Trabajo nuevo descubierto → `tablero proponer <GRUPO> "Título" "Descripción" --depende-de <ID>`.
-   - Avances/decisiones → `tablero editar <ID> "texto"` (solo en en_curso).
-5. **ENTREGA:** `tablero terminar <ID>` y en 3-5 líneas: qué hiciste, qué archivos
+   - Trabajo nuevo descubierto → `argos proponer <GRUPO> "Título" "Descripción" --depende-de <ID>`.
+   - Avances/decisiones → `argos editar <ID> "texto"` (solo en en_curso).
+5. **ENTREGA:** `argos terminar <ID>` y en 3-5 líneas: qué hiciste, qué archivos
    tocaste, cómo verificarlo. Tu trabajo acaba en revision, NO en hecha.
 6. **ESPERA** mientras haya tarjetas en revision (salvo modo YOLO).
-7. **CIERRE:** `tablero estado` + resumen: hecho, en revisión, bloqueado.
+7. **CIERRE:** `argos estado` + resumen: hecho, en revisión, bloqueado.
 
 ## SI ESTÁS ATASCADO
 
-- Falta información/credencial/decisión → NO inventes: `tablero pausar <ID>`,
-  `tablero editar <ID> "falta exactamente X"` y UNA pregunta concreta al humano.
+- Falta información/credencial/decisión → NO inventes: `argos pausar <ID>`,
+  `argos editar <ID> "falta exactamente X"` y UNA pregunta concreta al humano.
 - Dos fallos seguidos del CLI con la misma tarjeta → para y muestra el error tal cual.
 - Tarjeta ambigua → pregunta ANTES de empezar.
 
@@ -62,14 +62,14 @@ credenciales/dinero/borrado, la tarjeta es ambigua, o llegas al límite.
 ## ESCRITOR ÚNICO
 
 - Si el CLI dice "OCUPADO" (código 2), hay otro escritor con el lock: NO fuerces
-  nada, avisa al humano. `tablero unlock` es SOLO del humano.
+  nada, avisa al humano. `argos unlock` es SOLO del humano.
 - El humano puede editar el JSON a mano; tú nunca. Si algo no cuadra,
-  `tablero estado` + `tablero normalizar` antes de seguir.
+  `argos estado` + `argos normalizar` antes de seguir.
 
 ## ERRORES TÍPICOS QUE DEBES EVITAR
 
-- Inventarte un ID: los asigna el CLI (`tablero lista` para verlos).
+- Inventarte un ID: los asigna el CLI (`argos lista` para verlos).
 - Marcar trabajo como hecho: tu máximo es revision.
 - Encadenar tareas sin frase YOLO literal.
-- Resumir la mesa de memoria: léela siempre con `tablero estado`.
+- Resumir la mesa de memoria: léela siempre con `argos estado`.
 - Reintentar un rechazo cambiando argumentos hasta colar.

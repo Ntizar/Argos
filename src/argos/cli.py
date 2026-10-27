@@ -1,8 +1,8 @@
-"""Mesa — CLI del tablero. `tablero <comando> ...`
+"""Argos — CLI del tablero. `argos <comando> ...`
 
-Códigos de salida: 0 ok · 1 rechazo (ErrorTablero) · 2 tablero ocupado.
+Códigos de salida: 0 ok · 1 rechazo (ErrorArgos) · 2 argos ocupado.
 Todo comando acepta --json (salida estructurada para agentes) y
---tablero <ruta> (por defecto ./tablero.json).
+--argos <ruta> (por defecto ./argos.json).
 """
 from __future__ import annotations
 
@@ -15,11 +15,11 @@ import sys
 
 from . import __version__
 from .lock import (forzar_liberacion, info_lock, lock_de_escritura)
-from .modelo import (ESTADOS, ErrorTablero, Tablero, TableroOcupado)
+from .modelo import (ESTADOS, ErrorArgos, Argos, ArgosOcupado)
 
 RUTA_PLANTILLA_AGENTS = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    "..", "plantilla", "REGLAS-MESA.md")
+    "..", "plantilla", "REGLAS-ARGOS.md")
 
 # comandos que solo escriben (necesitan lock); lecturas van sin lock
 COMANDOS_LECTURA = {"estado", "ver", "preparadas", "bloqueadas", "lista", "version"}
@@ -39,10 +39,10 @@ def _fmt_tarea(t, extra="") -> str:
 # ------------------------------------------------------------------ comandos
 
 def cmd_init(args) -> int:
-    ruta = args.tablero
+    ruta = args.argos
     if os.path.exists(ruta):
-        raise ErrorTablero(f"{ruta} ya existe. No se sobreescribe nunca.")
-    tab = Tablero(ruta)
+        raise ErrorArgos(f"{ruta} ya existe. No se sobreescribe nunca.")
+    tab = Argos(ruta)
     tab.datos = {"proyecto": args.nombre or "", "version": 1, "tareas": []}
     os.makedirs(os.path.dirname(os.path.abspath(ruta)) or ".", exist_ok=True)
     tab.guardar()
@@ -56,25 +56,25 @@ def cmd_init(args) -> int:
                 creados.append(destino)
             else:
                 print("(aviso) plantilla AGENTS.md no encontrada; copia "
-                      "plantilla/AGENTS.md del repo Mesa a mano.")
+                      "plantilla/AGENTS.md del repo Argos a mano.")
     if args.json:
         print(_json({"creados": creados}))
     else:
         for c in creados:
             print(f"Creado: {c}")
-        print("Mesa lista. El agente empieza leyendo: tablero estado")
+        print("Argos lista. El agente empieza leyendo: argos estado")
     return 0
 
 
 def _ruta_plantilla():
     # dentro de un checkout del repo: plantilla/AGENTS.md a nivel de repo
     candidatos = [
-        # instalado como paquete: site-packages/tablero/plantilla/
+        # instalado como paquete: site-packages/argos/plantilla/
         os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                     "plantilla", "REGLAS-MESA.md"),
+                     "plantilla", "REGLAS-ARGOS.md"),
         # checkout del repo: plantilla/ a nivel de repo
         os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
-            os.path.abspath(__file__)))), "plantilla", "REGLAS-MESA.md"),
+            os.path.abspath(__file__)))), "plantilla", "REGLAS-ARGOS.md"),
     ]
     for c in candidatos:
         if os.path.exists(c):
@@ -83,12 +83,12 @@ def _ruta_plantilla():
 
 
 def cmd_estado(args) -> int:
-    tab = Tablero(args.tablero)
+    tab = Argos(args.argos)
     tab.cargar()
     conteo = {e: 0 for e in ESTADOS}
     for t in tab.tareas:
         conteo[t["estado"]] += 1
-    lock = info_lock(args.tablero)
+    lock = info_lock(args.argos)
     datos = {
         "proyecto": tab.datos.get("proyecto", ""),
         "total": len(tab.tareas),
@@ -99,7 +99,7 @@ def cmd_estado(args) -> int:
     if args.json:
         print(_json(datos))
         return 0
-    print(f"Mesa: {datos['proyecto'] or '(sin nombre)'} — {tab.ruta}")
+    print(f"Argos: {datos['proyecto'] or '(sin nombre)'} — {tab.ruta}")
     print(f"Total: {datos['total']} tareas")
     print("  " + " | ".join(f"{e}: {conteo[e]}" for e in ESTADOS))
     if conteo["en_curso"]:
@@ -121,7 +121,7 @@ def cmd_estado(args) -> int:
 
 
 def cmd_ver(args) -> int:
-    tab = Tablero(args.tablero)
+    tab = Argos(args.argos)
     tab.cargar()
     t = tab._exigir_id(args.id)
     faltan = tab.faltan_dependencias(t)
@@ -145,15 +145,15 @@ def cmd_ver(args) -> int:
 
 
 def cmd_preparadas(args) -> int:
-    tab = Tablero(args.tablero)
+    tab = Argos(args.argos)
     tab.cargar()
     prep = tab.preparadas()
     if args.json:
         print(_json(prep))
         return 0
     if not prep:
-        print("Ninguna tarjeta preparada. Revisa `tablero bloqueadas` "
-              "y `tablero estado`.")
+        print("Ninguna tarjeta preparada. Revisa `argos bloqueadas` "
+              "y `argos estado`.")
         return 0
     print(f"{len(prep)} tarjeta(s) preparada(s):")
     for t in prep:
@@ -162,7 +162,7 @@ def cmd_preparadas(args) -> int:
 
 
 def cmd_bloqueadas(args) -> int:
-    tab = Tablero(args.tablero)
+    tab = Argos(args.argos)
     tab.cargar()
     bloq = tab.bloqueadas()
     if args.json:
@@ -179,7 +179,7 @@ def cmd_bloqueadas(args) -> int:
 
 
 def cmd_lista(args) -> int:
-    tab = Tablero(args.tablero)
+    tab = Argos(args.argos)
     tab.cargar()
     tareas = tab.tareas
     if args.filtro:
@@ -198,8 +198,8 @@ def cmd_lista(args) -> int:
 
 
 def cmd_empezar(args) -> int:
-    with lock_de_escritura(args.tablero, "empezar"):
-        tab = Tablero(args.tablero)
+    with lock_de_escritura(args.argos, "empezar"):
+        tab = Argos(args.argos)
         tab.cargar()
         tab.normalizar()  # desbloqueo automático antes de trabajar
         r = tab.transicion(args.id, "en_curso", "empezar", "agente")
@@ -209,8 +209,8 @@ def cmd_empezar(args) -> int:
 
 
 def cmd_terminar(args) -> int:
-    with lock_de_escritura(args.tablero, "terminar"):
-        tab = Tablero(args.tablero)
+    with lock_de_escritura(args.argos, "terminar"):
+        tab = Argos(args.argos)
         tab.cargar()
         r = tab.transicion(args.id, "revision", "terminar", "agente")
         tab.guardar()
@@ -221,8 +221,8 @@ def cmd_terminar(args) -> int:
 
 
 def cmd_pausar(args) -> int:
-    with lock_de_escritura(args.tablero, "pausar"):
-        tab = Tablero(args.tablero)
+    with lock_de_escritura(args.argos, "pausar"):
+        tab = Argos(args.argos)
         tab.cargar()
         r = tab.transicion(args.id, "por_hacer", "pausar", "agente")
         tab.guardar()
@@ -238,8 +238,8 @@ def _salir_transicion(args, r):
 
 
 def cmd_editar(args) -> int:
-    with lock_de_escritura(args.tablero, "editar"):
-        tab = Tablero(args.tablero)
+    with lock_de_escritura(args.argos, "editar"):
+        tab = Argos(args.argos)
         tab.cargar()
         r = tab.editar_notas(args.id, " ".join(args.texto))
         tab.guardar()
@@ -251,8 +251,8 @@ def cmd_editar(args) -> int:
 
 
 def cmd_proponer(args) -> int:
-    with lock_de_escritura(args.tablero, "proponer"):
-        tab = Tablero(args.tablero)
+    with lock_de_escritura(args.argos, "proponer"):
+        tab = Argos(args.argos)
         tab.cargar()
         r = tab.proponer(args.grupo, args.titulo, args.descripcion,
                          args.depende_de)
@@ -266,8 +266,8 @@ def cmd_proponer(args) -> int:
 
 
 def cmd_aprobar(args) -> int:
-    with lock_de_escritura(args.tablero, "aprobar"):
-        tab = Tablero(args.tablero)
+    with lock_de_escritura(args.argos, "aprobar"):
+        tab = Argos(args.argos)
         tab.cargar()
         r = tab.aprobar(args.id)
         tab.normalizar()
@@ -277,8 +277,8 @@ def cmd_aprobar(args) -> int:
 
 
 def cmd_hecha(args) -> int:
-    with lock_de_escritura(args.tablero, "hecha"):
-        tab = Tablero(args.tablero)
+    with lock_de_escritura(args.argos, "hecha"):
+        tab = Argos(args.argos)
         tab.cargar()
         r = tab.marcar_hecha(args.id)
         tab.normalizar()
@@ -289,8 +289,8 @@ def cmd_hecha(args) -> int:
 
 
 def cmd_rechazar(args) -> int:
-    with lock_de_escritura(args.tablero, "rechazar"):
-        tab = Tablero(args.tablero)
+    with lock_de_escritura(args.argos, "rechazar"):
+        tab = Argos(args.argos)
         tab.cargar()
         r = tab.rechazar(args.id)
         tab.guardar()
@@ -302,8 +302,8 @@ def cmd_rechazar(args) -> int:
 
 
 def cmd_dep(args) -> int:
-    with lock_de_escritura(args.tablero, "dep"):
-        tab = Tablero(args.tablero)
+    with lock_de_escritura(args.argos, "dep"):
+        tab = Argos(args.argos)
         tab.cargar()
         r = tab.anadir_dependencia(args.bloquea, args.bloqueada)
         tab.normalizar()
@@ -316,8 +316,8 @@ def cmd_dep(args) -> int:
 
 
 def cmd_normalizar(args) -> int:
-    with lock_de_escritura(args.tablero, "normalizar"):
-        tab = Tablero(args.tablero)
+    with lock_de_escritura(args.argos, "normalizar"):
+        tab = Argos(args.argos)
         tab.cargar()
         r = tab.normalizar()
         tab.guardar()
@@ -330,14 +330,14 @@ def cmd_normalizar(args) -> int:
             for c in r["cambios"]:
                 print(f"  {c}")
         if not r["ids_asignados"] and not r["cambios"]:
-            print("Tablero normalizado: nada que cambiar.")
+            print("Argos normalizado: nada que cambiar.")
     return 0
 
 
 def cmd_sync(args) -> int:
-    carpeta = os.path.dirname(os.path.abspath(args.tablero)) or "."
+    carpeta = os.path.dirname(os.path.abspath(args.argos)) or "."
     if not os.path.isdir(os.path.join(carpeta, ".git")):
-        raise ErrorTablero(
+        raise ErrorArgos(
             f"{carpeta} no es un repo git: sync no aplica.")
     pasos = [["git", "pull", "--rebase", "--autostash"],
              ["git", "push"]]
@@ -364,7 +364,7 @@ def cmd_sync(args) -> int:
 
 
 def cmd_unlock(args) -> int:
-    r = forzar_liberacion(args.tablero)
+    r = forzar_liberacion(args.argos)
     if args.json:
         print(_json({"liberado": r}))
     else:
@@ -376,11 +376,11 @@ def cmd_unlock(args) -> int:
 
 def construir_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
-        prog="tablero",
-        description="Mesa: tablero de tareas humano+agente. Hecho con ❤️ por David Antizar.")
-    p.add_argument("--version", action="version", version=f"mesa {__version__}")
-    p.add_argument("--tablero", default="tablero.json",
-                   help="ruta del tablero.json (por defecto ./tablero.json)")
+        prog="argos",
+        description="Argos: tablero de tareas humano+agente. Hecho con ❤️ por David Antizar.")
+    p.add_argument("--version", action="version", version=f"argos {__version__}")
+    p.add_argument("--argos", default="argos.json",
+                   help="ruta del argos.json (por defecto ./argos.json)")
     p.add_argument("--json", action="store_true",
                    help="salida en JSON para agentes")
     sub = p.add_subparsers(dest="comando", required=True)
@@ -389,12 +389,12 @@ def construir_parser() -> argparse.ArgumentParser:
         q = sub.add_parser(nombre, help=ayuda)
         # SUPPRESS: los flags comunes funcionan ANTES o DESPUÉS del subcomando
         # sin que el default del subparser pise lo que el parser global ya leyó.
-        q.add_argument("--tablero", default=argparse.SUPPRESS)
+        q.add_argument("--argos", default=argparse.SUPPRESS)
         q.add_argument("--json", action="store_true", default=argparse.SUPPRESS)
         q.set_defaults(fn=fn)
         return q
 
-    q = sp("init", cmd_init, "crea tablero.json (+ AGENTS.md)")
+    q = sp("init", cmd_init, "crea argos.json (+ AGENTS.md)")
     q.add_argument("nombre", nargs="?", default="")
     q.add_argument("--sin-agents", action="store_true")
 
@@ -448,10 +448,10 @@ def main(argv=None) -> int:
     args = parser.parse_args(argv)
     try:
         return args.fn(args)
-    except TableroOcupado as e:
+    except ArgosOcupado as e:
         print(f"OCUPADO: {e}", file=sys.stderr)
         return 2
-    except ErrorTablero as e:
+    except ErrorArgos as e:
         print(f"RECHAZADO: {e}", file=sys.stderr)
         return 1
     except KeyboardInterrupt:
